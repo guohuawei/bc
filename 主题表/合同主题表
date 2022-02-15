@@ -1,0 +1,124 @@
+select opt_cont.project_id,                    -- 项目id
+       bas_project.project_name,               -- 项目名称
+       bas_project.project_type,               -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       bas_project.project_name_short,         -- 项目简称
+       bas_project.region_id,                  -- 区域id
+       bas_region.region_name,                 -- 区域名称
+       bas_project.city_id,                    -- 城市id
+       bas_city.city_name,                     -- 城市名称
+       opt_cont.cont_no,                       -- 合同编码
+       opt_cont.cont_amount,                   -- 合同总金额
+       opt_cont.cont_type,                     -- 合同类型 1001:招商合同 1002:多经合同 1003:意向协议 1004:写字楼合同
+       opt_cont.cont_name,                     -- 合同名称
+       opt_cont.contract_status,               -- 合同状态 1001:待审核 1002:已审核 1003:已解约 1004:已清算
+       opt_cont.cont_nature,                   -- 合同性质 1001:新租 1002:续租
+       opt_cont.tenant_id,                     -- 商家id
+       opt_cont.tenant_no,                     -- 商家编码
+       opt_cont.tenant_name,                   -- 商家名称
+       opt_cont.brand_id,                      -- 品牌id
+       opt_cont.brand_no,                      -- 品牌编码
+       opt_cont.brand_name,                    -- 品牌名称
+       opt_cont.brand_format_id,               -- 签约业态id
+       opt_cont.brand_format_name,             -- 签约业态名称
+       opt_cont.space_format_plan_id,          -- 规划业态id
+       opt_cont.space_format_name_plan,        -- 规划业态名称
+       opt_cont.project_operate_status,        -- 营运状态
+       opt_cont.space_ids,                     -- 租赁区域ids 多个逗号分隔
+       opt_cont.space_equity_nature,           -- 产权类型 多值半角逗号分割
+       opt_cont.area_id_type,                  -- 计租面积类型
+       opt_cont.space_gross_area,              -- 建筑面积
+       opt_cont.space_net_area,                -- 套内面积
+       opt_cont.meter_rent_area,               -- 计租面积
+       opt_cont.decorate_enter_date,           -- 装修进场日
+       opt_cont.decorate_end_date,             -- 装修结束日
+       opt_cont.open_date,                     -- 开业日
+       opt_cont.cont_begin_date,               -- 合同开始日
+       opt_cont.cont_end_date,                 -- 合同结束日
+       opt_cont.decorate_period,               -- 装修期
+       opt_cont.rent_years,                    -- 租期
+       opt_cont.oppoint_date,                  -- 交付日
+       opt_cont.contract_ternination_id,       -- 合同解约id
+       opt_cont.termination_date,              -- 合同解约日期
+       opt_cont_double_sign.double_date,       -- 合同双签日期
+       opt_cont_double_sign.double_sign_state, -- 双签状态 0:未双签，1:已双签
+       t2.rent_algorithm,                      -- 租金收费方式
+       t2.mgr_algorithm,                       -- 物管收费方式
+       t1.plan_first_format,                   -- 合同规划业态（一级）
+       t1.plan_second_format,                  -- 合同规划业态（二级）
+       t1.plan_three_format,                   -- 合同规划业态（三级）
+       t1.sign_first_format,                   -- 合同签约业态（一级）
+       t1.sign_second_format,                  -- 合同签约业态（二级）
+       t1.sign_three_format,                   -- 合同签约业态（三级）
+       t1.plan_first_format_id,                -- 合同规划业态id（一级）
+       t1.plan_second_format_id,               -- 合同规划业态id（二级）
+       t1.plan_three_format_id,                -- 合同规划业态id（三级）
+       t1.sign_first_format_id,                -- 合同签约业态id（一级）
+       t1.sign_second_format_id,               -- 合同签约业态id（二级）
+       t1.sign_three_format_id,                -- 合同签约业态id（三级）
+       current_date                            -- ETL时间
+from ods.ods_bc_yw_pms_business_db_opt_cont_dt opt_cont
+         left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+                   on opt_cont.project_id = bas_project.id and bas_project.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+                   on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_opt_cont_double_sign_dt opt_cont_double_sign
+                   on opt_cont.id = opt_cont_double_sign.cont_id and opt_cont_double_sign.is_deleted = '0'
+         left join
+     (
+         select opt_cont_cycle.cont_id,
+                fin_basic_fee.fee_type,
+                case
+                    when fin_basic_fee.fee_type = '1001' then concat_ws('_', collect_set(cast(opt_cont_cycle.algorithm_id as string)))
+                    else null end as rent_algorithm,
+                case
+                    when fin_basic_fee.fee_type = '1002' then concat_ws('_', collect_set(cast(opt_cont_cycle.algorithm_id as string)))
+                    else null end as mgr_algorithm
+         from ods.ods_bc_yw_pms_business_db_opt_cont_cycle_dt opt_cont_cycle
+                  left join ods.ods_bc_yw_pms_business_db_fin_basic_fee_dt fin_basic_fee
+                            on opt_cont_cycle.fee_id = fin_basic_fee.id and fin_basic_fee.is_deleted = '0'
+         where opt_cont_cycle.is_deleted = '0'
+         group by opt_cont_cycle.cont_id, fin_basic_fee.fee_type
+         order by cont_id
+     ) t2
+     on opt_cont.id = t2.cont_id
+         left join
+     (
+         -- 合同签约 业态 和 规划业态
+         select opt_cont.id,
+                max(case when t3.level = 1 then t3.format_name else null end)   plan_first_format,     -- 合同规划业态（一级）
+                max(case when t2.level = 2 then t2.format_name else null end)   plan_second_format,    -- 合同规划业态（二级）
+                max(case when t1.level = 3 then t1.format_name else null end)   plan_three_format,     -- 合同规划业态（三级）
+                max(case when t3.level = 1 then t3.id else null end)            plan_first_format_id,  -- 合同规划业态id（一级）
+                max(case when t2.level = 2 then t2.id else null end)            plan_second_format_id, -- 合同规划业态id（二级）
+                max(case when t1.level = 3 then t1.id else null end)            plan_three_format_id,  -- 合同规划业态id（三级）
+
+                max(case when t13.level = 1 then t13.format_name else null end) sign_first_format,     -- 合同签约业态（一级）
+                max(case when t12.level = 2 then t12.format_name else null end) sign_second_format,    -- 合同签约业态（二级）
+                max(case when t11.level = 3 then t11.format_name else null end) sign_three_format,     -- 合同签约业态（三级）
+                max(case when t13.level = 1 then t13.id else null end)          sign_first_format_id,  -- 合同签约业态id（一级）
+                max(case when t12.level = 2 then t12.id else null end)          sign_second_format_id, -- 合同签约业态id（二级）
+                max(case when t11.level = 3 then t11.id else null end)          sign_three_format_id   -- 合同签约业态id（三级）
+         from ods.ods_bc_yw_pms_business_db_opt_cont_dt opt_cont
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t1
+                            on opt_cont.space_format_plan_id = t1.id and t1.is_deleted = '0' and t1.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t2
+                            on t1.parent_id = t2.id and t2.is_deleted = '0' and t2.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t3
+                            on t2.parent_id = t3.id and t3.is_deleted = '0' and t3.status = '0'
+
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t11
+                            on opt_cont.brand_format_id = t11.id and t11.is_deleted = '0' and t11.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t12
+                            on t11.parent_id = t12.id and t12.is_deleted = '0' and t12.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t13
+                            on t12.parent_id = t13.id and t13.is_deleted = '0' and t13.status = '0'
+         where opt_cont.is_deleted = '0'
+         group by opt_cont.id
+     ) t1 on opt_cont.id = t1.id
+where opt_cont.is_deleted = '0';
+
+
+
+

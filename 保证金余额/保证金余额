@@ -1,0 +1,79 @@
+select t1.project_id,                  -- 项目id
+       bas_project.project_name,       -- 项目名称
+       bas_project.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       bas_project.project_name_short, -- 项目简称
+       bas_project.region_id,          -- 区域id
+       bas_region.region_name,         -- 区域名称
+       bas_project.city_id,            -- 城市id
+       bas_city.city_name,             -- 城市名称
+       t1.cont_id,                     -- 合同id
+       t1.cont_no,                     -- 合同号
+       t1.brand_id,                    -- 品牌id
+       t1.brand_name,                  -- 品牌名称
+       t1.tenant_id,                   -- 商家id
+       t1.tenant_name,                 -- 商家名称
+       t1.fee_id,                      -- 费项id
+       t1.money1,                      -- 收款
+       t1.money2,                      -- 退款
+       t1.money3,                      -- 罚没
+       t1.money4,                      -- 冲抵
+       t1.money5,                      -- 转换
+       t1.money6,                      -- 反核销-收款
+       t1.money7,                      -- 反核销-冲抵
+       t1.money8,                      -- 付款反核销
+       t1.amount,                      -- 保证金余额
+       current_date                    -- ETL时间
+from (
+         select fin_keep.project_id,                       -- 项目id
+                fin_keep.cont_id,                          -- 合同id
+                fin_keep.cont_no,                          -- 合同号
+                fin_keep.brand_id,                         -- 品牌id
+                fin_keep.brand_name,                       -- 品牌名称
+                fin_keep.tenant_id,                        -- 商家id
+                fin_keep.tenant_name,                      -- 商家名称
+                fin_keep.fee_id,                           -- 费项id
+                sum(case
+                        when fin_keep_turnover_item.type = '1001' then fin_keep_turnover_item.amount
+                        else null end) as          money1, -- 收款
+                sum(case
+                        when fin_keep_turnover_item.type = '1002' then fin_keep_turnover_item.amount
+                        else null end) as          money2, -- 退款
+                sum(case
+                        when fin_keep_turnover_item.type = '1003' then fin_keep_turnover_item.amount
+                        else null end) as          money3, -- 罚没
+                sum(case
+                        when fin_keep_turnover_item.type = '1004' then fin_keep_turnover_item.amount
+                        else null end) as          money4, -- 冲抵
+                sum(case
+                        when fin_keep_turnover_item.type = '1005' then fin_keep_turnover_item.amount
+                        else null end) as          money5, -- 转换
+                sum(case
+                        when fin_keep_turnover_item.type = '1006' then fin_keep_turnover_item.amount
+                        else null end) as          money6, -- 反核销-收款
+                sum(case
+                        when fin_keep_turnover_item.type = '1007' then fin_keep_turnover_item.amount
+                        else null end) as          money7, -- 反核销-冲抵
+                sum(case
+                        when fin_keep_turnover_item.type = '1008' then fin_keep_turnover_item.amount
+                        else null end) as          money8, -- 付款反核销
+                sum(fin_keep_turnover_item.amount) amount  -- 保证金余额
+         from ods.ods_bc_yw_pms_business_db_fin_keep_dt fin_keep
+                  left join ods.ods_bc_yw_pms_business_db_fin_keep_turnover_item_dt fin_keep_turnover_item
+                            on fin_keep.id = fin_keep_turnover_item.keep_id and
+                               fin_keep.fee_id = fin_keep_turnover_item.fee_id
+         group by fin_keep.cont_id,
+                  fin_keep.cont_no,
+                  fin_keep.project_id,
+                  fin_keep.brand_id,
+                  fin_keep.brand_name,
+                  fin_keep.tenant_id,
+                  fin_keep.tenant_name,
+                  fin_keep.fee_id
+     ) t1
+         left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+                   on t1.project_id = bas_project.id and bas_project.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+                   on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0';
+

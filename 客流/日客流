@@ -1,0 +1,34 @@
+select bas_project.id,                                                 -- 项目id
+       bas_project.project_name,                                       -- 项目名称
+       bas_project.project_type,                                       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       bas_project.project_name_short,                                 -- 项目简称
+       bas_region.id,                                                  -- 区域id
+       bas_region.region_name,                                         -- 区域名称
+       bas_city.id,                                                    -- 城市id
+       bas_city.city_name,                                             -- 城市名称
+       opt_custom_flow_record.custom_date,                             -- 客流日期
+       opt_custom_flow_record.customer_flow_entry_daliy,               -- 进客流
+       opt_custom_flow_record.customer_flow_exit_daliy,                -- 出客流
+       opt_custom_flow_record_target.target_customer_flow_entry_daliy, -- 客流指标
+       bas_holidays_date.is_holiday,                                   -- 节假日 （1：是  0 ： 否）
+       current_date                                                    -- ETL时间
+from ods.ods_bc_yw_pms_business_db_opt_custom_flow_record_dt opt_custom_flow_record
+         left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+                   on opt_custom_flow_record.project_id = bas_project.id and bas_project.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+                   on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_opt_custom_flow_record_target_dt opt_custom_flow_record_target
+                   on opt_custom_flow_record.project_id = opt_custom_flow_record_target.project_id and
+                      opt_custom_flow_record.custom_date = opt_custom_flow_record_target.custom_date and
+                      opt_custom_flow_record_target.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_holidays_date_dt bas_holidays_date
+                   on opt_custom_flow_record.project_id = bas_holidays_date.project_id
+                       and opt_custom_flow_record.custom_date = bas_holidays_date.holidays_date and
+                      bas_holidays_date.is_deleted = '0'
+where opt_custom_flow_record.is_deleted = '0';
+
+
+
+

@@ -1,0 +1,93 @@
+select bas_project.id,                     -- 项目id
+       bas_project.project_name,           -- 项目名称
+       bas_project.project_type,           -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       bas_project.project_name_short,     -- 项目简称
+       bas_region.id,                      -- 区域id
+       bas_region.region_name,             -- 区域名称
+       bas_city.id,                        -- 城市id
+       bas_city.city_name,                 -- 城市名称
+       bas_space.space_status,             -- 商铺状态（1001:新建 1002:合同 1003:开业 1004：空置 1005：失效）
+       bas_space.id,                       -- 铺位id
+       bas_space.space_name,               -- 铺位名称
+       bas_space.space_no,                 -- 铺位编号
+       bas_space.leasable_area,            -- 计租面积
+       bas_space.space_gross_area,         -- 建筑面积
+       bas_space.space_net_area,           -- 套内面积
+       bas_space.effective_date,           -- 生效起始日期
+       bas_space.is_opening_ratio,         -- 是否统计（开业率）
+       bas_space.is_vacancy_ratio,         -- 是否统计（出租率）
+       bas_space.sign_format_id,           -- 签约业态主键（业态表）
+       bas_space.plan_format_id,           -- 规划业态主键（业态表）
+       bas_space.owner_name,               -- 业主名称
+       bas_space.owner_contacts_name,      -- 业主联系人
+       bas_space.owner_contacts_tel,       -- 业主电话
+       bas_space.type,                     -- 类型（1001:商铺、1002:租赁单元、1003:多径）
+       bas_space.space_type,               -- 商业类型 (1001:商铺 1002:仓库 1003:公寓 )
+       bas_space.space_equity_nature,      -- 产权性质(1001:自持 1002:销售不返租 1003:销售返租 )
+       bas_space.space_location,           -- 商铺属性(1001:主力店 1002:次主力店 1003:一般商铺 )
+       bas_space.area_type,                -- 计租面积类型
+       bas_project.project_operate_status, -- 营运状态
+       bas_project.created_time,           -- 项目创建时间
+       t3.plan_first_format,               -- 铺位规划业态（一级）
+       t3.plan_second_format,              -- 铺位规划业态（二级）
+       t3.plan_three_format,               -- 铺位规划业态（三级）
+       t3.sign_first_format,               -- 铺位签约业态（一级）
+       t3.sign_second_format,              -- 铺位签约业态（二级）
+       t3.sign_three_format,               -- 铺位签约业态（三级）
+       t3.plan_first_format_id,            -- 铺位规划业态id（一级）
+       t3.plan_second_format_id,           -- 铺位规划业态id（二级）
+       t3.plan_three_format_id,            -- 铺位规划业态id（三级）
+       t3.sign_first_format_id,            -- 铺位签约业态id（一级）
+       t3.sign_second_format_id,           -- 铺位签约业态id（二级）
+       t3.sign_three_format_id,            -- 铺位签约业态id（三级）
+       current_date                        -- ETL时间
+
+from ods.ods_bc_yw_pms_business_db_bas_space_dt bas_space
+         left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+                   on bas_space.project_id = bas_project.id and bas_project.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_floor_dt bas_floor
+                   on bas_space.floor_id = bas_floor.id and bas_floor.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_building_dt bas_building
+                   on bas_space.building_id = bas_building.id and bas_building.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+                   on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join
+     (
+         -- 铺位签约 业态 和 规划业态
+         select bas_space.id,                                                                          -- 铺位id
+                max(case when t3.level = 1 then t3.format_name else null end)   plan_first_format,     -- 铺位规划业态（一级）
+                max(case when t2.level = 2 then t2.format_name else null end)   plan_second_format,    -- 铺位规划业态（二级）
+                max(case when t1.level = 3 then t1.format_name else null end)   plan_three_format,     -- 铺位规划业态（三级）
+                max(case when t3.level = 1 then t3.id else null end)            plan_first_format_id,  -- 铺位规划业态id（一级）
+                max(case when t2.level = 2 then t2.id else null end)            plan_second_format_id, -- 铺位规划业态id（二级）
+                max(case when t1.level = 3 then t1.id else null end)            plan_three_format_id,  -- 铺位规划业态id（三级）
+
+                max(case when t13.level = 1 then t13.format_name else null end) sign_first_format,     -- 铺位签约业态（一级）
+                max(case when t12.level = 2 then t12.format_name else null end) sign_second_format,    -- 铺位签约业态（二级）
+                max(case when t11.level = 3 then t11.format_name else null end) sign_three_format,     -- 铺位签约业态（三级）
+                max(case when t13.level = 1 then t13.id else null end)          sign_first_format_id,  -- 铺位签约业态id（一级）
+                max(case when t12.level = 2 then t12.id else null end)          sign_second_format_id, -- 铺位签约业态id（二级）
+                max(case when t11.level = 3 then t11.id else null end)          sign_three_format_id   -- 铺位签约业态id（三级）
+
+         from ods.ods_bc_yw_pms_business_db_bas_space_dt bas_space
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t1
+                            on bas_space.plan_format_id = t1.id and t1.is_deleted = '0' and t1.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t2
+                            on t1.parent_id = t2.id and t2.is_deleted = '0' and t2.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t3
+                            on t2.parent_id = t3.id and t3.is_deleted = '0' and t3.status = '0'
+
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t11
+                            on bas_space.sign_format_id = t11.id and t11.is_deleted = '0' and t11.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t12
+                            on t11.parent_id = t12.id and t12.is_deleted = '0' and t12.status = '0'
+                  left join ods.ods_bc_yw_pms_business_db_bas_format_dt t13
+                            on t12.parent_id = t13.id and t13.is_deleted = '0' and t13.status = '0'
+         where bas_space.is_deleted = '0'
+         group by bas_space.id
+     ) t3 on bas_space.id = t3.id
+where bas_space.is_deleted = '0';
+
+

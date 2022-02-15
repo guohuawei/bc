@@ -1,0 +1,13 @@
+select lea_cont_package.cont_id,               -- 合同id
+       lea_cont_package.cont_space_id,         -- 招商合同铺位id
+       fin_basic_fee.fee_name,                 -- 费项名称
+       fin_basic_fee.fee_no,                   -- 费项编码
+       fin_basic_fee.fee_type,                 -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款)
+       lea_cont_package.standard_cycle_amount, -- 标准期总额
+       lea_cont_package.cycle_amount,          -- 期总额
+       current_date                            -- ETL时间
+
+from ods.ods_bc_yw_pms_business_db_lea_cont_package_dt lea_cont_package
+         left join ods.ods_bc_yw_pms_business_db_fin_basic_fee_dt fin_basic_fee
+                   on lea_cont_package.fee_id = fin_basic_fee.id and fin_basic_fee.is_deleted = '0'
+where lea_cont_package.is_deleted = '0';

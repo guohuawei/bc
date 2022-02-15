@@ -1,0 +1,52 @@
+select t1.id,                        -- 项目id
+       t1.project_name,              -- 项目名称
+       t1.project_type,              -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       t1.project_name_short,        -- 项目简称
+       t1.region_id,                 -- 区域id
+       bas_region.region_name,       -- 区域名称
+       t1.city_id,                   -- 城市id
+       bas_city.city_name,           -- 城市名称
+       t1.year_month1,               -- 销售额日期(年月)
+       t2.confirm_sales_volume,      -- 确认销售额
+       t3.target_sales_volume_daliy, -- 月销售额目标
+       current_date                  -- ETL时间
+
+from (
+         select distinct bas_project.id,                 -- 项目id
+                         bas_project.project_name,       -- 项目名称
+                         bas_project.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+                         bas_project.project_name_short, -- 项目简称
+                         bas_project.region_id,
+                         bas_project.city_id,
+                         year,
+                         month,
+                         year_month1
+         from dim.dim_pl_date,
+              ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+         where year between '2021' and '2030'
+           and bas_project.is_deleted = '0'
+     ) t1
+         left join
+     (
+         select opt_income_record_day.project_id,
+                sum(confirm_sales_volume)                          confirm_sales_volume,
+                substring(opt_income_record_day.income_date, 0, 7) sales_month
+         from ods.ods_bc_yw_pms_business_db_opt_income_record_day_dt opt_income_record_day
+         where opt_income_record_day.is_deleted = '0'
+           and opt_income_record_day.check_status_sales in ('1003', '1006')
+         group by opt_income_record_day.project_id, substring(opt_income_record_day.income_date, 0, 7)
+     ) t2 on t1.id = t2.project_id and t1.year_month1 = t2.sales_month
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on t1.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+                   on t1.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join
+     (
+         select project_id,
+                substring(fill_date, 0, 7)     fill_date_month,
+                sum(target_sales_volume_daliy) target_sales_volume_daliy
+         from ods.ods_bc_yw_pms_business_db_opt_income_record_target_dt opt_income_record_target
+         where is_deleted = '0'
+         group by project_id, substring(fill_date, 0, 7)
+     ) t3 on t1.id = t3.project_id and t1.year_month1 = t3.fill_date_month
+

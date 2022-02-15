@@ -1,0 +1,15 @@
+select space_id,     --  '商铺主键',
+       space_no,     -- '商铺编号',
+       status_old,   --  '商铺状态 数据字典 项目信息/商铺维护/商铺状态',
+       status_new,   --  '商铺状态 数据字典 项目信息/商铺维护/商铺状态',
+       action,       -- '状态变更原因',
+       version_no,   -- '版本号',
+       source_type,  -- '变更业务来源（1001、）',
+       source_no,    -- '变更业务号',
+       approval_no,  -- '审批号',
+       is_deleted,   --  '逻辑删除，1:删除，0：未删除',
+       created_time, --  '创建时间',
+       updated_time, --  '更新时间',
+       current_date  -- ETL时间
+
+from ods.ods_bc_yw_pms_business_db_bas_space_status_log_dt;

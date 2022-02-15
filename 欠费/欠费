@@ -1,0 +1,139 @@
+select t3.project_id,         -- 项目id
+       t3.project_name,       -- 项目名称
+       t3.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       t3.project_name_short, -- 项目简称
+       t3.region_id,          -- 区域id
+       t3.region_name,        -- 区域名称
+       t3.fee_type,           -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
+       t3.tenant_name,        -- 商家名称
+       t3.tenant_id,          -- 商家id
+       t3.cont_id,            -- 合同id
+       t3.year_month1,        -- 年月
+       t3.qz_owe,             -- 权责欠费
+       t4.cont_owe,           -- 合同欠费
+       current_date           -- ETL时间
+
+from (
+         -- 权责欠费
+         select t2.project_id,         -- 项目id
+                t2.project_name,       -- 项目名称
+                t2.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+                t2.project_name_short, -- 项目简称
+                t2.region_id,          -- 区域id
+                t2.region_name,        -- 区域名称
+                t2.fee_type,           -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
+                t2.cont_id,            -- 合同id
+                t2.tenant_id,          -- 商家id
+                t2.tenant_name,        -- 商家名称
+                t1.year_month1,        -- 年月
+                t2.qz_owe              -- 权责欠费
+         from (
+                  select distinct bis_project.id,
+                                  bis_project.project_name,
+                                  year,
+                                  month,
+                                  year_month1
+                  from dim.dim_pl_date,
+                       ods.ods_bc_yw_pms_business_db_bas_project_dt bis_project
+                  where year between '2021' and '2025'
+              ) t1
+                  left join
+              (
+                  select t1.project_id,                   -- 项目id
+                         t1.project_name,                 -- 项目名称
+                         t1.project_type,                 -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+                         t1.project_name_short,           -- 项目简称
+                         t1.region_id,                    -- 区域id
+                         t1.region_name,                  -- 区域名称
+                         t1.fee_type,                     -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
+                         t1.financial_date,               -- 权责月
+                         t1.cont_id,                      -- 合同id
+                         t1.tenant_id,                    -- 商家id
+                         t1.tenant_name,                  -- 商家名称
+                         sum(t2.unverified_amount) qz_owe -- 权责欠费
+                  from dws.dws_bis_qz_must_month_big_dt t1
+                           left join dws.dws_bis_qz_fact_month_big_dt t2
+                                     on t1.project_id = t2.project_id
+                                         and t1.receivable_id = t2.receivable_id
+                                         and t1.financial_date = t2.financial_date
+                                         and t1.fee_type = t2.fee_type
+                                         and t1.cont_id = t2.cont_id
+                                         and t1.tenant_id = t2.tenant_id
+                                         and t1.tenant_name = t2.tenant_name
+                  where t1.fee_type in ('1001', '1002')
+                  group by t1.project_id,         -- 项目id
+                           t1.project_name,       -- 项目名称
+                           t1.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+                           t1.project_name_short, -- 项目简称
+                           t1.region_id,          -- 区域id
+                           t1.region_name,        -- 区域名称
+                           t1.cont_id,            -- 合同id
+                           t1.tenant_id,          -- 商家id
+                           t1.tenant_name,        -- 商家名称
+                           t1.fee_type,           -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
+                           t1.financial_date -- 权责月
+              ) t2 on t1.id = t2.project_id and t1.year_month1 = t2.financial_date
+     ) t3
+         left join
+     (
+         -- 合同欠费
+         select t2.project_id,         -- 项目id
+                t2.project_name,       -- 项目名称
+                t2.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+                t2.project_name_short, -- 项目简称
+                t2.region_id,          -- 区域id
+                t2.region_name,        -- 区域名称
+                t2.fee_type,           -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
+                t2.cont_id,            -- 合同id
+                t2.tenant_id,          -- 商家id
+                t2.tenant_name,        -- 商家名称
+                t1.year_month1,        -- 年月
+                t2.cont_owe            -- 合同欠费
+         from (
+                  select distinct bis_project.id,
+                                  bis_project.project_name,
+                                  year,
+                                  month,
+                                  year_month1
+                  from dim.dim_pl_date,
+                       ods.ods_bc_yw_pms_business_db_bas_project_dt bis_project
+                  where year between '2021' and '2025'
+              ) t1
+                  left join
+              (
+                  select t1.project_id,                     -- 项目id
+                         t1.project_name,                   -- 项目名称
+                         t1.project_type,                   -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+                         t1.project_name_short,             -- 项目简称
+                         t1.region_id,                      -- 区域id
+                         t1.region_name,                    -- 区域名称
+                         t1.fee_type,                       -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
+                         t1.financial_date,                 -- 合同月
+                         t1.cont_id,                        -- 合同id
+                         t1.tenant_id,                      -- 商家id
+                         t1.tenant_name,                    -- 商家名称
+                         sum(t2.unverified_amount) cont_owe -- 合同欠费
+                  from dws.dws_bis_cont_must_month_big_dt t1
+                           left join dws.dws_bis_cont_fact_month_big_dt t2
+                                     on t1.project_id = t2.project_id
+                                         and t1.receivable_id = t2.receivable_id
+                                         and t1.financial_date = t2.financial_date
+                                         and t1.fee_type = t2.fee_type
+                                         and t1.cont_id = t2.cont_id
+                                         and t1.tenant_id = t2.tenant_id
+                                         and t1.tenant_name = t2.tenant_name
+                  where t1.fee_type in ('1001', '1002')
+                  group by t1.project_id,         -- 项目id
+                           t1.project_name,       -- 项目名称
+                           t1.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+                           t1.project_name_short, -- 项目简称
+                           t1.region_id,          -- 区域id
+                           t1.region_name,        -- 区域名称
+                           t1.cont_id,            -- 合同id
+                           t1.tenant_id,          -- 商家id
+                           t1.tenant_name,        -- 商家名称
+                           t1.fee_type,           -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
+                           t1.financial_date -- 合同月
+              ) t2 on t1.id = t2.project_id and t1.year_month1 = t2.financial_date
+     ) t4 on t3.project_id = t4.project_id and t3.year_month1 = t4.year_month1 and t3.cont_id = t4.cont_id and
+             t3.tenant_id = t4.tenant_id and t3.tenant_name = t4.tenant_name;

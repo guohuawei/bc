@@ -1,0 +1,50 @@
+select fin_receivable.project_id,             -- 项目id
+       bas_project.project_name,              -- 项目名称
+       bas_project.project_type,              -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       bas_project.project_name_short,        -- 项目简称
+       bas_project.region_id,                 -- 区域id
+       bas_region.region_name,                -- 区域名称
+       bas_project.city_id,                   -- 城市id
+       bas_city.city_name,                    -- 城市名称
+       fin_receivable.receivable_no,          -- 应收编码
+       fin_receivable.id,                     -- 应收id
+       fin_receivable.fee_id,                 -- 费项id
+       fin_basic_fee.fee_name,                -- 费项名称
+       fin_basic_fee.fee_type,                -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款)
+       fin_receivable.fee_no,                 -- 费项编码
+       fin_receivable.cont_id,                -- 合同id
+       fin_receivable.cont_no,                -- 合同编号
+       fin_receivable.cont_type,              -- 合同类型
+       fin_receivable.tenant_id,              -- 商家/企业id
+       fin_receivable.tenant_no,              -- 商家/企业编码
+       fin_receivable.tenant_name,            -- 商家/企业名称
+       fin_receivable.brand_id,               -- 品牌id
+       fin_receivable.brand_no,               -- 品牌编码
+       fin_receivable.brand_name,             -- 品牌名称
+       fin_receivable.building_ids,           -- 楼栋ids，多个逗号隔开
+       fin_receivable.building_names,         -- 楼栋名称，多个逗号隔开
+       fin_receivable.floor_ids,              -- 楼层ids，多个逗号隔开
+       fin_receivable.floor_names,            -- 楼层名称，多个逗号隔开
+       fin_receivable.space_ids,              -- 铺位ids，多个逗号隔开
+       fin_receivable.space_names,            -- 铺位号，多个逗号隔开
+       fin_receivable.payment_start_date,     -- 账期开始时间
+       fin_receivable.payment_end_date,       -- 账期结束时间
+       fin_receivable.receivable_time,        -- 应收日期
+       fin_receivable.financial_date,         -- 权责月
+       fin_receivable.receivable_amount,      -- 应收金额
+       fin_receivable.sub_amount,             -- 减免金额
+       fin_receivable.received_amount,        -- 已核销金额
+       fin_receivable.un_received_amount,     -- 未核销金额
+       fin_receivable.verification_status_id, -- 核销状态
+       fin_receivable.sub_status_id,          -- 减免状态
+       current_date                           -- ETL时间
+
+from ods.ods_bc_yw_pms_business_db_fin_receivable_dt fin_receivable
+         left join ods.ods_bc_yw_pms_business_db_fin_basic_fee_dt fin_basic_fee
+                   on fin_receivable.fee_id = fin_basic_fee.id and fin_basic_fee.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+                   on fin_receivable.project_id = bas_project.id and bas_project.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+where fin_receivable.is_deleted = '0';
