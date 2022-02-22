@@ -1,0 +1,29 @@
+select bas_project.id,                     -- 项目id
+       bas_project.project_name,           -- 项目名称
+       bas_project.project_name_short,     -- 项目简称
+       bas_project.project_manager,        -- 项目负责人
+       bas_project.project_opening_date,   -- 项目开业时间
+       bas_region.id,                      -- 区域id
+       bas_region.region_name,             -- 区域名称
+       bas_city.id,                        -- 城市id
+       bas_city.city_name,                 -- 城市名称
+       bas_project.is_deleted,             -- 逻辑删除，1:删除，0：未删除',
+       bas_project.type,                   -- 类型（1001商业、1002写字楼）',
+       bas_project.project_property_type,  -- 物业管理类型 数据字典 项目信息/项目维护/物业管理类型',
+       bas_project.project_operate_status, -- 营运状态  数据字典 项目信息/项目维护/营运状态',
+       bas_project.project_type,           -- 经营类型  数据字典 项目信息/项目维护/经营类型',
+       bas_project.project_equity_nature,  -- 产权性质  数据字典 项目信息/项目维护/产权性质',
+       bas_project.project_gross_area,     -- 项目建筑面积(m²)',
+       bas_project.project_leasable_area,  -- 项目计租面积(m²)',
+       bas_project.project_manager_tel,    -- 联系电话',
+       bas_project.project_address,        -- 项目地址',
+       bas_project.remark,                 -- 备注',
+       bas_project.longitude,              -- 经度',
+       bas_project.latitude,               -- 纬度',
+       bas_project.park_space_num,         -- 停车位数量',
+       current_date                        -- ETL时间
+from ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+                   on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
