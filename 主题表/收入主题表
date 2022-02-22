@@ -47,4 +47,4 @@ from ods.ods_bc_yw_pms_business_db_fin_receivable_dt fin_receivable
          left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
                    on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
-where fin_receivable.is_deleted = '0';
+where fin_receivable.is_deleted = '0' and fin_receivable.is_to_push = '1001';
