@@ -9,6 +9,12 @@ select t1.id,                        -- 项目id
        t1.year_month1,               -- 销售额日期(年月)
        t2.confirm_sales_volume,      -- 确认销售额
        t3.target_sales_volume_daliy, -- 月销售额目标
+       t2.sign_first_format,         -- 合同签约业态（一级）
+       t2.sign_second_format,        -- 合同签约业态（二级）
+       t2.sign_three_format,         -- 合同签约业态（三级）
+       t2.sign_first_format_id,      -- 合同签约业态id（一级）
+       t2.sign_second_format_id,     -- 合同签约业态id（二级）
+       t2.sign_three_format_id,      -- 合同签约业态id（三级）
        current_date                  -- ETL时间
 
 from (
@@ -30,11 +36,43 @@ from (
      (
          select opt_income_record_day.project_id,
                 sum(confirm_sales_volume)                          confirm_sales_volume,
-                substring(opt_income_record_day.income_date, 0, 7) sales_month
+                substring(opt_income_record_day.income_date, 0, 7) sales_month,
+                t1.sign_first_format,     -- 合同签约业态（一级）
+                t1.sign_second_format,    -- 合同签约业态（二级）
+                t1.sign_three_format,     -- 合同签约业态（三级）
+                t1.sign_first_format_id,  -- 合同签约业态id（一级）
+                t1.sign_second_format_id, -- 合同签约业态id（二级）
+                t1.sign_three_format_id  -- 合同签约业态id（三级）
          from ods.ods_bc_yw_pms_business_db_opt_income_record_day_dt opt_income_record_day
+                  left join
+              (
+                  -- 合同签约 业态 和 规划业态
+                  select opt_cont.id,
+                         max(case when t13.level = 1 then t13.format_name else null end) sign_first_format,     -- 合同签约业态（一级）
+                         max(case when t12.level = 2 then t12.format_name else null end) sign_second_format,    -- 合同签约业态（二级）
+                         max(case when t11.level = 3 then t11.format_name else null end) sign_three_format,     -- 合同签约业态（三级）
+                         max(case when t13.level = 1 then t13.id else null end)          sign_first_format_id,  -- 合同签约业态id（一级）
+                         max(case when t12.level = 2 then t12.id else null end)          sign_second_format_id, -- 合同签约业态id（二级）
+                         max(case when t11.level = 3 then t11.id else null end)          sign_three_format_id   -- 合同签约业态id（三级）
+                  from ods.ods_bc_yw_pms_business_db_opt_cont_dt opt_cont
+                           left join ods.ods_bc_yw_pms_business_db_bas_format_dt t11
+                                     on opt_cont.brand_format_id = t11.id and t11.is_deleted = '0' and t11.status = '0'
+                           left join ods.ods_bc_yw_pms_business_db_bas_format_dt t12
+                                     on t11.parent_id = t12.id and t12.is_deleted = '0' and t12.status = '0'
+                           left join ods.ods_bc_yw_pms_business_db_bas_format_dt t13
+                                     on t12.parent_id = t13.id and t13.is_deleted = '0' and t13.status = '0'
+                  where opt_cont.is_deleted = '0'
+                  group by opt_cont.id
+              ) t1 on opt_income_record_day.cont_id = t1.id
          where opt_income_record_day.is_deleted = '0'
            and opt_income_record_day.check_status_sales in ('1003', '1006')
-         group by opt_income_record_day.project_id, substring(opt_income_record_day.income_date, 0, 7)
+         group by opt_income_record_day.project_id, substring(opt_income_record_day.income_date, 0, 7),
+                  t1.sign_first_format,     -- 合同签约业态（一级）
+                  t1.sign_second_format,    -- 合同签约业态（二级）
+                  t1.sign_three_format,     -- 合同签约业态（三级）
+                  t1.sign_first_format_id,  -- 合同签约业态id（一级）
+                  t1.sign_second_format_id, -- 合同签约业态id（二级）
+                  t1.sign_three_format_id -- 合同签约业态id（三级）
      ) t2 on t1.id = t2.project_id and t1.year_month1 = t2.sales_month
          left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
                    on t1.region_id = bas_region.id and bas_region.is_deleted = '0'
