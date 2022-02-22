@@ -1,17 +1,17 @@
-select bas_project.id,                                                                                        -- 项目id
-       bas_project.project_name,                                                                              -- 项目名称
-       bas_project.project_type,                                                                              -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
-       bas_project.project_name_short,                                                                        -- 项目简称
-       bas_region.id,                                                                                         -- 区域id
-       bas_region.region_name,                                                                                -- 区域名称
-       bas_city.id,                                                                                           -- 城市id
-       bas_city.city_name,                                                                                    -- 城市名称
-       substring(opt_custom_flow_record.custom_date, 0, 7) custom_date,                                       -- 月份
-       sum(nvl(opt_custom_flow_record.customer_flow_entry_daliy, 0)) customer_flow_entry_daliy,               -- 进客流
-       sum(nvl(opt_custom_flow_record.customer_flow_exit_daliy, 0)) customer_flow_exit_daliy,                 -- 出客流
+select bas_project.id,                                                                                             -- 项目id
+       bas_project.project_name,                                                                                   -- 项目名称
+       bas_project.project_type,                                                                                   -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       bas_project.project_name_short,                                                                             -- 项目简称
+       bas_region.id,                                                                                              -- 区域id
+       bas_region.region_name,                                                                                     -- 区域名称
+       bas_city.id,                                                                                                -- 城市id
+       bas_city.city_name,                                                                                         -- 城市名称
+       concat_ws("-", substring(opt_custom_flow_record.custom_date, 0, 7), '01') custom_date,                      -- 月份
+       sum(nvl(opt_custom_flow_record.customer_flow_entry_daliy, 0))             customer_flow_entry_daliy,        -- 进客流
+       sum(nvl(opt_custom_flow_record.customer_flow_exit_daliy, 0))              customer_flow_exit_daliy,         -- 出客流
        sum(nvl(opt_custom_flow_record_target.target_customer_flow_entry_daliy,
-               0)) target_customer_flow_entry_daliy,                                                          -- 客流指标
-       current_date                                                                                           -- ETL时间
+               0))                                                               target_customer_flow_entry_daliy, -- 客流指标
+       current_date                                                                                                -- ETL时间
 from ods.ods_bc_yw_pms_business_db_opt_custom_flow_record_dt opt_custom_flow_record
          left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
                    on opt_custom_flow_record.project_id = bas_project.id and bas_project.is_deleted = '0'
