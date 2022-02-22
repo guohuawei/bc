@@ -37,7 +37,7 @@ from (
                   left join ods.ods_bc_yw_pms_business_db_fin_received_ver_dt fin_received_ver
                             on fin_received_ver_item.received_ver_id = fin_received_ver.id and
                                fin_received_ver.is_deleted = '0'
-         where fin_receivable.is_deleted = '0'
+         where fin_receivable.is_deleted = '0' and fin_receivable.is_to_push = '1001'
          group by fin_receivable.id,
                   fin_receivable.project_id,
                   fin_receivable.tenant_id,
