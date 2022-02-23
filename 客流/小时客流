@@ -1,0 +1,21 @@
+select bas_project.id,                 -- 项目id
+       bas_project.project_name,       -- 项目名称
+       bas_project.project_type,       -- 经营类型(1001:购物中心 1002:商业街 1003:写字楼 1004：轻资产)
+       bas_project.project_name_short, -- 项目简称
+       bas_region.id,                  -- 区域id
+       bas_region.region_name,         -- 区域名称
+       bas_city.id,                    -- 城市id
+       bas_city.city_name,             -- 城市名称
+       custom_date,                    -- 日期
+       day_hour,                       -- 小时
+       day_hour_minutes,               -- 分钟
+       customer_flow_entry,            -- 入场客流
+       customer_flow_exit,             -- 出场客流
+       custom_date
+from ods.ods_bc_yw_pms_business_db_opt_custom_flow_hour_dt opt_custom_flow_hour
+         left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
+                   on opt_custom_flow_hour.project_id = bas_project.id and bas_project.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
+                   on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
+                   on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0';
