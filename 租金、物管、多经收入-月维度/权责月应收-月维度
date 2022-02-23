@@ -6,7 +6,7 @@ select t1.project_id,                  -- 项目id
        bas_project.region_id,          -- 区域id
        bas_region.region_name,         -- 区域名称
        t1.fee_type,                    -- 费项类型(1001:租金 1002:物管 1003:保证金 1004:滞纳金 1005:能耗 1006:暂收款 1007:多经)
-       t1.financial_date,              -- 权责月
+       if(t1.financial_date is null ,t1.financial_date,concat_ws('-',t1.financial_date,'01')),              -- 权责月
        t1.receivable_amount,           -- 应收金额
        t1.sub_amount,                  -- 减免金额
        t1.tenant_name,                 -- 商家名称
@@ -25,7 +25,7 @@ from (
                 fin_receivable.tenant_id,                                      -- 商家id
                 fin_receivable.cont_id,                                        -- 合同id
                 fin_receivable.cont_no,                                        -- 合同号
-                fin_receivable.id,                                             -- 应收id
+                fin_receivable.id                                             -- 应收id
          from ods.ods_bc_yw_pms_business_db_fin_receivable_dt fin_receivable
                   left join ods.ods_bc_yw_pms_business_db_fin_basic_fee_dt fin_basic_fee
                             on fin_receivable.fee_id = fin_basic_fee.id and fin_basic_fee.is_deleted = '0'

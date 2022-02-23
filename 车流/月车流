@@ -6,9 +6,9 @@ select bas_project.id,                                                          
        bas_region.region_name,                                                                        -- 区域名称
        bas_city.id,                                                                                   -- 城市id
        bas_city.city_name,                                                                            -- 城市名称
-       substring(opt_traffic_flow_record.traffic_date, 0, 7),                                         -- 月份
+       concat_ws('-', substring(opt_traffic_flow_record.traffic_date, 0, 7), '01'),                   -- 月份
        sum(nvl(opt_traffic_flow_record.traffic_flow_entry_daliy, 0)) traffic_flow_entry_daliy,        -- 进场车流
-       sum(nvl(opt_traffic_flow_record.traffic_flow_exit_daliy, 0)) traffic_flow_exit_daliy,        -- 出厂车流
+       sum(nvl(opt_traffic_flow_record.traffic_flow_exit_daliy, 0))  traffic_flow_exit_daliy,         -- 出厂车流
        sum(nvl(opt_traffic_flow_record_target.target_traffic_flow_entry_daliy,
                0))                                                   target_traffic_flow_entry_daliy, -- 目标单日入场客流
        current_date                                                                                   -- ETL时间
