@@ -36,7 +36,7 @@ select opt_cont.project_id,                    -- 项目id
        opt_cont.cont_end_date,                 -- 合同结束日
        opt_cont.decorate_period,               -- 装修期
        opt_cont.rent_years,                    -- 租期
-       opt_cont.oppoint_date,                  -- 交付日
+       opt_cont.appoint_date,                  -- 交付日
        opt_cont.contract_ternination_id,       -- 合同解约id
        opt_cont.termination_date,              -- 合同解约日期
        opt_cont_double_sign.double_date,       -- 合同双签日期
