@@ -21,9 +21,23 @@ select bas_project.id,                     -- 项目id
        bas_project.longitude,              -- 经度',
        bas_project.latitude,               -- 纬度',
        bas_project.park_space_num,         -- 停车位数量',
+       bas_provinces.province_name,        -- 省份名称
+       bas_provinces.province_no,          -- 省份编码
+       bas_provinces.province_status,      -- 省份状态
        current_date                        -- ETL时间
 from ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
          left join ods.ods_bc_yw_pms_business_db_bas_region_dt bas_region
                    on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
                    on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_provinces_dt bas_provinces
+                   on bas_city.province_id = bas_provinces.id and bas_provinces.is_deleted = '0';
+
+
+
+
+
+
+
+
+

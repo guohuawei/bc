@@ -1,0 +1,36 @@
+select fin_received_ver_item.id,
+       fin_received_ver_item.received_ver_id,
+       fin_received_ver_item.receivable_id,
+       fin_received_ver_item.receivable_no,
+       fin_received_ver_item.cont_id,
+       fin_received_ver_item.cont_no,
+       fin_received_ver_item.fee_id,
+       fin_received_ver_item.fee_no,
+       fin_received_ver_item.receivable_time,
+       fin_received_ver_item.financial_date,
+       fin_received_ver_item.tax,
+       fin_received_ver_item.receivable_amount,
+       fin_received_ver_item.derate_amount,
+       fin_received_ver_item.received_amount,
+       fin_received_ver_item.unverified_amount,
+       fin_received_ver_item.collection_verification,
+       fin_received_ver_item.zan_offset_amount,
+       fin_received_ver_item.bao_offset_amount,
+       fin_received_ver_item.receivable_reduction_amount,
+       fin_received_ver_item.is_collection,
+       fin_received_ver_item.is_deleted,
+       fin_received_ver_item.creator_id,
+       fin_received_ver_item.creator_name,
+       fin_received_ver_item.created_time,
+       fin_received_ver_item.updater_id,
+       fin_received_ver_item.updater_name,
+       fin_received_ver_item.updated_time,
+       fin_received_ver_item.deleted_id,
+       fin_received_ver_item.deleted_name,
+       fin_received_ver_item.deleted_time,
+       fin_received_ver.verification_date, -- 核销日期
+       fin_received_ver.audit_status,      -- 核销审核状态
+       current_date
+from ods.ods_bc_yw_pms_business_db_fin_received_ver_item_dt fin_received_ver_item
+         left join ods.ods_bc_yw_pms_business_db_fin_received_ver_dt fin_received_ver
+                   on fin_received_ver_item.receivable_id = fin_received_ver.id;

@@ -19,6 +19,9 @@ select bas_project.id,                             -- 项目id
        t1.sign_first_format_id,                    -- 合同签约业态id（一级）
        t1.sign_second_format_id,                   -- 合同签约业态id（二级）
        t1.sign_three_format_id,                    -- 合同签约业态id（三级）
+       bas_provinces.province_name,            -- 省份名称
+       bas_provinces.province_no,              -- 省份编码
+       bas_provinces.province_status,          -- 省份状态
        current_date                                -- ETL时间
 
 from ods.ods_bc_yw_pms_business_db_opt_income_record_day_dt opt_income_record_day
@@ -28,6 +31,8 @@ from ods.ods_bc_yw_pms_business_db_opt_income_record_day_dt opt_income_record_da
                    on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
                    on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_provinces_dt bas_provinces
+                   on bas_city.province_id = bas_provinces.id and bas_provinces.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_bas_holidays_date_dt bas_holidays_date
                    on opt_income_record_day.project_id = bas_holidays_date.project_id
                        and opt_income_record_day.income_date = bas_holidays_date.holidays_date and

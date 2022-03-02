@@ -11,6 +11,9 @@ select bas_project.id,                                                          
        sum(nvl(opt_traffic_flow_record.traffic_flow_exit_daliy, 0))  traffic_flow_exit_daliy,         -- 出厂车流
        sum(nvl(opt_traffic_flow_record_target.target_traffic_flow_entry_daliy,
                0))                                                   target_traffic_flow_entry_daliy, -- 目标单日入场客流
+       bas_provinces.province_name,                                                                   -- 省份名称
+       bas_provinces.province_no,                                                                     -- 省份编码
+       bas_provinces.province_status,                                                                 -- 省份状态
        current_date                                                                                   -- ETL时间
 from ods.ods_bc_yw_pms_business_db_opt_traffic_flow_record_dt opt_traffic_flow_record
          left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
@@ -19,6 +22,8 @@ from ods.ods_bc_yw_pms_business_db_opt_traffic_flow_record_dt opt_traffic_flow_r
                    on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
                    on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_provinces_dt bas_provinces
+                   on bas_city.province_id = bas_provinces.id and bas_provinces.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_opt_traffic_flow_record_target_dt opt_traffic_flow_record_target
                    on opt_traffic_flow_record.project_id = opt_traffic_flow_record_target.project_id
                        and opt_traffic_flow_record.traffic_date = opt_traffic_flow_record_target.traffic_date and
@@ -26,4 +31,6 @@ from ods.ods_bc_yw_pms_business_db_opt_traffic_flow_record_dt opt_traffic_flow_r
 where opt_traffic_flow_record.is_deleted = '0'
 group by bas_project.id, bas_project.project_name, bas_project.project_type, bas_project.project_name_short,
          bas_region.region_name, bas_region.id, bas_city.id, bas_city.city_name,
-         substring(opt_traffic_flow_record.traffic_date, 0, 7);
+         substring(opt_traffic_flow_record.traffic_date, 0, 7), bas_provinces.province_name, -- 省份名称
+         bas_provinces.province_no,                                                          -- 省份编码
+         bas_provinces.province_status;

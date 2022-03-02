@@ -11,6 +11,9 @@ select bas_project.id,                                                 -- 项目
        opt_custom_flow_record.customer_flow_exit_daliy,                -- 出客流
        opt_custom_flow_record_target.target_customer_flow_entry_daliy, -- 客流指标
        bas_holidays_date.is_holiday,                                   -- 节假日 （1：是  0 ： 否）
+       bas_provinces.province_name,            -- 省份名称
+       bas_provinces.province_no,              -- 省份编码
+       bas_provinces.province_status,          -- 省份状态
        current_date                                                    -- ETL时间
 from ods.ods_bc_yw_pms_business_db_opt_custom_flow_record_dt opt_custom_flow_record
          left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
@@ -27,6 +30,8 @@ from ods.ods_bc_yw_pms_business_db_opt_custom_flow_record_dt opt_custom_flow_rec
                    on opt_custom_flow_record.project_id = bas_holidays_date.project_id
                        and opt_custom_flow_record.custom_date = bas_holidays_date.holidays_date and
                       bas_holidays_date.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_provinces_dt bas_provinces
+                   on bas_city.province_id = bas_provinces.id and bas_provinces.is_deleted = '0'
 where opt_custom_flow_record.is_deleted = '0';
 
 

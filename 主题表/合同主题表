@@ -55,6 +55,9 @@ select opt_cont.project_id,                    -- 项目id
        t1.sign_first_format_id,                -- 合同签约业态id（一级）
        t1.sign_second_format_id,               -- 合同签约业态id（二级）
        t1.sign_three_format_id,                -- 合同签约业态id（三级）
+       bas_provinces.province_name,            -- 省份名称
+       bas_provinces.province_no,              -- 省份编码
+       bas_provinces.province_status,          -- 省份状态
        current_date                            -- ETL时间
 from ods.ods_bc_yw_pms_business_db_opt_cont_dt opt_cont
          left join ods.ods_bc_yw_pms_business_db_bas_project_dt bas_project
@@ -63,6 +66,8 @@ from ods.ods_bc_yw_pms_business_db_opt_cont_dt opt_cont
                    on bas_project.region_id = bas_region.id and bas_region.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_bas_city_dt bas_city
                    on bas_project.city_id = bas_city.id and bas_city.is_deleted = '0'
+         left join ods.ods_bc_yw_pms_business_db_bas_provinces_dt bas_provinces
+                   on bas_city.province_id = bas_provinces.id and bas_provinces.is_deleted = '0'
          left join ods.ods_bc_yw_pms_business_db_opt_cont_double_sign_dt opt_cont_double_sign
                    on opt_cont.id = opt_cont_double_sign.cont_id and opt_cont_double_sign.is_deleted = '0'
          left join
@@ -70,10 +75,12 @@ from ods.ods_bc_yw_pms_business_db_opt_cont_dt opt_cont
          select opt_cont_cycle.cont_id,
                 fin_basic_fee.fee_type,
                 case
-                    when fin_basic_fee.fee_type = '1001' then concat_ws('_', collect_set(cast(opt_cont_cycle.algorithm_id as string)))
+                    when fin_basic_fee.fee_type = '1001' then concat_ws('_',
+                                                                        collect_set(cast(opt_cont_cycle.algorithm_id as string)))
                     else null end as rent_algorithm,
                 case
-                    when fin_basic_fee.fee_type = '1002' then concat_ws('_', collect_set(cast(opt_cont_cycle.algorithm_id as string)))
+                    when fin_basic_fee.fee_type = '1002' then concat_ws('_',
+                                                                        collect_set(cast(opt_cont_cycle.algorithm_id as string)))
                     else null end as mgr_algorithm
          from ods.ods_bc_yw_pms_business_db_opt_cont_cycle_dt opt_cont_cycle
                   left join ods.ods_bc_yw_pms_business_db_fin_basic_fee_dt fin_basic_fee
