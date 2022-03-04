@@ -1,0 +1,37 @@
+select t.space_id,                                                -- 铺位id
+       t.space_gross_area,                                        -- 铺位变更前建筑面积
+       t.space_gross_area_new,                                    -- 铺位变更后建筑面积
+       t.space_net_area,                                          -- 铺位变更前套内面积
+       t.space_net_area_new,                                      -- 铺位变更后套内面积
+       nvl(t1.approval_end_time, t.effective_date) as start_date, -- 铺位面价变更开始时间
+       t.approval_end_time                            end_date,   -- 铺位面价变更结束时间
+       current_date                                               -- ETL时间
+from (
+         select t1.space_id,
+                t1.space_gross_area,
+                t1.space_gross_area_new,
+                t1.space_net_area,     -- 铺位变更前套内面积
+                t1.space_net_area_new, -- 铺位变更后套内面积
+                from_unixtime(unix_timestamp(t2.effective_date, 'yyyy-MM-dd'), 'yyyy-MM-dd HH:mm:ss') effective_date,
+                t1.approval_end_time,
+                row_number() over (partition by space_id order by t1.approval_end_time) as            s
+         from ods.ods_bc_yw_pms_business_db_bas_space_change_area_dt t1
+                  left join ods.ods_bc_yw_pms_business_db_bas_space_dt t2 on t1.space_id = t2.id and t2.is_deleted = '0'
+         where t1.is_deleted = '0' and t1.check_status = 1003
+         order by t1.space_id
+     ) t
+         left join
+     (
+         select t1.space_id,
+                t1.space_gross_area,
+                t1.space_gross_area_new,
+                t1.space_net_area,     -- 铺位变更前套内面积
+                t1.space_net_area_new, -- 铺位变更后套内面积
+                t2.effective_date,
+                t1.approval_end_time,
+                row_number() over (partition by space_id order by t1.approval_end_time) + 1 as s
+         from ods.ods_bc_yw_pms_business_db_bas_space_change_area_dt t1
+                  left join ods.ods_bc_yw_pms_business_db_bas_space_dt t2 on t1.space_id = t2.id and t2.is_deleted = '0'
+         where t1.is_deleted = '0' and t1.check_status = 1003
+         order by t1.space_id
+     ) t1 on t.space_id = t1.space_id and t.s = t1.s;
